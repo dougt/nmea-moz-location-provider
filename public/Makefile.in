@@ -1,0 +1,18 @@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE		    = nmea_geolocation_provider
+XPIDL_MODULE	= nmea_geolocation_provider
+XPI_NAME        = nmea_geolocation_provider
+
+EXPORTS = \
+		$(NULL)
+
+XPIDLSRCS	= \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk

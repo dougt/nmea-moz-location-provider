@@ -1,0 +1,16 @@
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE                  = nmea_geolocation_provider
+DIRS		            = public src
+XPI_NAME	        	= nmea_geolocation_provider
+INSTALL_EXTENSION_ID	= nmea_geolocation_provider@mozilla.com
+XPI_PKGNAME	        	= nmea_geolocation_provider
+
+DIST_FILES = install.rdf
+
+include $(topsrcdir)/config/rules.mk

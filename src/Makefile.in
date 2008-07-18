@@ -1,0 +1,29 @@
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+IS_COMPONENT = 1
+MODULE       = nmea_geolocation_provider
+LIBRARY_NAME = nmea_geolocation_provider
+USE_STATIC_LIBS = 1
+
+XPI_NAME = nmea_geolocation_provider
+
+REQUIRES	= xpcom \
+		      string \
+			  dom \
+		      $(NULL)
+
+CPPSRCS		= NMEAStreamLocationProvider.cpp \
+			  nmeap01.cpp \
+			  $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+EXTRA_DSO_LDOPTS += \
+  $(XPCOM_GLUE_LDOPTS) \
+  $(NSPR_LIBS) \
+  $(NULL)
