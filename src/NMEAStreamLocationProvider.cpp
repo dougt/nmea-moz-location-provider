@@ -199,14 +199,21 @@ NMEAStreamLocationProvider::~NMEAStreamLocationProvider()
 
 NS_IMETHODIMP NMEAStreamLocationProvider::Startup()
 {
+#ifdef DEBUG
+  printf("@@@@@ gps add paser failed\n");
+#endif
   nsresult rv;
   nsCString nmeaPath;
   nsCOMPtr<nsIPrefBranch2> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
   if (prefs)
     rv = prefs->GetCharPref("geo.nmea.path", getter_Copies(nmeaPath));
 
-  if (NS_FAILED(rv) || nmeaPath == nsnull)
-    return NS_ERROR_FAILURE;
+#ifdef DEBUG
+  printf("@@@@@ gps startup\n");
+#endif
+
+  if (NS_FAILED(rv))
+    return rv;
 
   mNMEAPath = nmeaPath;
   mKeepGoing = PR_TRUE;
@@ -216,24 +223,40 @@ NS_IMETHODIMP NMEAStreamLocationProvider::Startup()
 
 NS_IMETHODIMP NMEAStreamLocationProvider::IsReady(PRBool *_retval NS_OUTPARAM)
 {
+#ifdef DEBUG
+  printf("@@@@@ gps isready called\n");
+#endif
+
   *_retval = mHasSeenLocation;
   return NS_OK;
 }
 
 NS_IMETHODIMP NMEAStreamLocationProvider::Watch(nsIGeolocationUpdate *callback)
 {
+#ifdef DEBUG
+  printf("@@@@@ gps watch called\n");
+#endif
+
   mCallback = callback; // weak ref
   return NS_OK;
 }
 
 NS_IMETHODIMP NMEAStreamLocationProvider::GetCurrentLocation(nsIDOMGeolocation * *aCurrentLocation)
 {
+#ifdef DEBUG
+  printf("@@@@@ gps get current location called\n");
+#endif
+
   NS_IF_ADDREF(*aCurrentLocation = mLastLocation);
   return NS_OK;
 }
 
 NS_IMETHODIMP NMEAStreamLocationProvider::Shutdown()
 {
+#ifdef DEBUG
+  printf("@@@@@ gps shutdown called\n");
+#endif
+
   mKeepGoing = PR_FALSE;
 
   if (mThread) {
@@ -251,6 +274,10 @@ NS_IMETHODIMP NMEAStreamLocationProvider::Shutdown()
 
 void NMEAStreamLocationProvider::Update(nsIDOMGeolocation* aLocation)
 {
+#ifdef DEBUG
+  printf("@@@@@ gps update called\n");
+#endif
+
   mHasSeenLocation = PR_TRUE;
   mLastLocation = aLocation;
 
@@ -269,6 +296,10 @@ void NMEAStreamLocationProvider::Update(nsIDOMGeolocation* aLocation)
 
 NS_IMETHODIMP NMEAStreamLocationProvider::Run()
 {
+#ifdef DEBUG
+  printf("@@@@@ gps run called\n");
+#endif
+
   // okay, lets do it.  nsLocalFile doesn't open special
   // files on the mac correctly, so lets do this old school.
 
@@ -278,12 +309,18 @@ NS_IMETHODIMP NMEAStreamLocationProvider::Run()
   int status = nmeap_init(&nmea, nsnull);
   if (status != 0) {
     Update(nsnull);
+#ifdef DEBUG
+    printf("@@@@@ gps init failed\n");
+#endif
     return NS_ERROR_FAILURE;
   }
 
   status = nmeap_addParser(&nmea,"GPGGA", nmeap_gpgga, nsnull, &gga);
   if (status != 0) {
     Update(nsnull);
+#ifdef DEBUG
+    printf("@@@@@ gps add paser failed\n");
+#endif
     return NS_ERROR_FAILURE;
   }
   
@@ -291,6 +328,9 @@ NS_IMETHODIMP NMEAStreamLocationProvider::Run()
 
   if (!nmeaStream) {
     Update(nsnull);
+#ifdef DEBUG
+    printf("@@@@@ gps open failed\n");
+#endif
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -302,10 +342,16 @@ NS_IMETHODIMP NMEAStreamLocationProvider::Run()
     if (fread(&ch, 1, 1, nmeaStream) != 1)
     {
       Update(nsnull);
+#ifdef DEBUG
+      printf("@@@@@ gps read failed\n");
+#endif
       return NS_ERROR_NOT_AVAILABLE;
     }
   
     status = nmeap_parse(&nmea, ch);
+#ifdef DEBUG
+    printf("@@@@@ gps parse returned %d\n", status);
+#endif
   
     switch(status) {
       case NMEAP_GPGGA:
@@ -316,6 +362,9 @@ NS_IMETHODIMP NMEAStreamLocationProvider::Run()
           PRTime now = PR_Now();
           if (now - lastUpdated > 2000)
           {
+#ifdef DEBUG
+            printf("@@@@@ gps update (%d. %d)\n", gga.latitude, gga.longitude);
+#endif
             lastUpdated = now;
             nsRefPtr<nsGeolocation> somewhere = new nsGeolocation(gga.latitude,
                                                                   gga.longitude,
